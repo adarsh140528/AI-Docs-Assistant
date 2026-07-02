@@ -1,0 +1,23 @@
+#MainMenu{
+visibility:hidden;
+}
+
+footer{
+visibility:hidden;
+}
+
+.stApp{
+background:#F5F7FB;
+}
+
+.stButton button{
+border-radius:10px;
+}
+
+.stChatMessage{
+border-radius:12px;
+}
+
+textarea{
+border-radius:12px !important;
+}
