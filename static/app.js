@@ -461,23 +461,28 @@ document.addEventListener("DOMContentLoaded", () => {
                 body: formData
             });
 
+            const rawText = await res.text();
+            let data = null;
+            try {
+                data = JSON.parse(rawText);
+            } catch (_) {}
+
             if (!res.ok) {
                 let errMsg = `Upload failed (Status ${res.status})`;
-                try {
-                    const err = await res.json();
-                    errMsg = err.detail || err.message || errMsg;
-                } catch (_) {
-                    const text = await res.text();
-                    if (text && text.length < 300 && !text.includes("<!DOCTYPE") && !text.includes("<html")) {
-                        errMsg = text;
-                    } else {
-                        errMsg = `Server error (${res.status} ${res.statusText || "Processing Error"}). Please retry or check server logs.`;
-                    }
+                if (data && (data.detail || data.message)) {
+                    errMsg = data.detail || data.message;
+                } else if (rawText && rawText.length < 300 && !rawText.includes("<!DOCTYPE") && !rawText.includes("<html")) {
+                    errMsg = rawText;
+                } else {
+                    errMsg = `Server error (${res.status} ${res.statusText || "Processing Error"}). Please retry or check server logs.`;
                 }
                 throw new Error(errMsg);
             }
 
-            const data = await res.json();
+            if (!data) {
+                throw new Error("Invalid response received from server.");
+            }
+
             ingestProgressBar.style.width = "100%";
             ingestProgressText.textContent = "Complete!";
 
