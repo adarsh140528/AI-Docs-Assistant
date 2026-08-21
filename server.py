@@ -52,8 +52,15 @@ def get_rag_service():
     )
 
 # -----------------------------------------------------------------------------
-# API Endpoints
+# Health Check Endpoints (Prevents 502 Bad Gateway on Cloud Deployments)
 # -----------------------------------------------------------------------------
+
+@app.get("/health")
+@app.get("/api/health")
+@app.get("/ping")
+def health_check():
+    """Fast, lightweight health check for cloud load balancers and deployment probes."""
+    return {"status": "ok", "service": "Adorush AI Assistant", "version": "2.0.0"}
 
 @app.get("/api/status")
 def get_status():
@@ -191,4 +198,7 @@ app.mount("/", StaticFiles(directory="static", html=True), name="static")
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=PORT)
+    host = os.getenv("HOST", "0.0.0.0")
+    port = int(os.getenv("PORT", "8000"))
+    print(f"🚀 Starting server on http://{host}:{port}")
+    uvicorn.run("server:app", host=host, port=port, reload=False, workers=1)

@@ -143,11 +143,51 @@ Open your browser at **[http://localhost:8000](http://localhost:8000)**.
 
 ---
 
+## 🚀 Easy Cloud Deployment (Fixes 502 Bad Gateway)
+
+Why does **502 Bad Gateway** usually happen on cloud platforms (Render, Railway, Heroku, Fly.io)?
+1. **Port binding**: Cloud platforms assign a dynamic `$PORT` (e.g. `10000`). If your app binds to `127.0.0.1:8000`, the cloud proxy cannot reach it.
+2. **Missing Health Check**: Cloud load balancers probe `/health` or `/api/health` before routing traffic.
+3. **PyTorch Memory Exhaustion**: Running multiple Gunicorn workers loads multiple PyTorch models into RAM, triggering OOM (Out Of Memory) SIGKILL.
+4. **Worker Timeout**: Model initialization can take >30s on cold start without keep-alive timeouts.
+
+This repository includes pre-configured **`Procfile`**, **`render.yaml`**, **`Dockerfile`**, and **`start.sh`** to make deployments 100% reliable.
+
+### Option 1: Deploy to Render (Recommended - Free & Easy)
+1. Push this repository to your GitHub.
+2. Go to [Render Dashboard](https://dashboard.render.com/) -> **New Web Service**.
+3. Connect your repository.
+4. Configure the settings:
+   - **Environment**: `Python`
+   - **Build Command**: `pip install -r requirements-cpu.txt` (or `pip install -r requirements.txt`)
+   - **Start Command**: `uvicorn server:app --host 0.0.0.0 --port $PORT --workers 1 --timeout-keep-alive 75`
+   - **Health Check Path**: `/health`
+5. Add Environment Variables:
+   - `GROQ_API_KEY`: `gsk_your_groq_api_key_here`
+6. Click **Deploy Web Service**!
+
+### Option 2: Deploy with Docker (Any Cloud / VPS / Hugging Face)
+```bash
+# Build the Docker image (CPU optimized with pre-cached models)
+docker build -t ai-docs-assistant .
+
+# Run container
+docker run -d -p 8000:8000 -e GROQ_API_KEY="your_api_key" ai-docs-assistant
+```
+
+### Option 3: Deploy to Railway
+1. Click **New Project** -> **Deploy from GitHub repo**.
+2. Railway will automatically detect the `Procfile` and `Dockerfile`.
+3. Set the `GROQ_API_KEY` variable in the Railway project dashboard.
+
+---
+
 ## 🌐 API Reference
 
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
-| `GET` | `/api/status` | Health check & model status |
+| `GET` | `/health` / `/ping` | Lightweight health check probe for load balancers |
+| `GET` | `/api/status` | System configuration & model status |
 | `GET` | `/api/knowledge-bases` | List all available Knowledge Bases with metadata |
 | `DELETE` | `/api/knowledge-bases/{name}` | Delete a Knowledge Base |
 | `POST` | `/api/ingest` | Multipart upload to parse, chunk, embed, and index documents |
