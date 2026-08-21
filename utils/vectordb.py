@@ -67,4 +67,11 @@ class VectorDB:
 
     def count(self) -> int:
         """Return total number of vectors in collection."""
+        if self.collection is None:
+            return 0
         return self.collection.count()
+
+    def close(self):
+        """Release collection and client references."""
+        self.collection = None
+        self.client = None

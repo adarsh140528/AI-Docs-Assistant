@@ -144,8 +144,19 @@ class HybridRetriever:
 
         return merged_documents, sources
 
+    def unload_index(self, index_name: str):
+        """Unload and close a specific index from cache."""
+        if index_name in self._db_cache:
+            db = self._db_cache.pop(index_name)
+            if db:
+                db.close()
+        if index_name in self._bm25_cache:
+            self._bm25_cache.pop(index_name)
+
     def clear_cache(self):
         """Clear cached VectorDB and BM25 instances."""
+        for name in list(self._db_cache.keys()):
+            self.unload_index(name)
         self._db_cache.clear()
         self._bm25_cache.clear()
 

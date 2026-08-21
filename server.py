@@ -87,9 +87,10 @@ def list_knowledge_bases():
 
 @app.delete("/api/knowledge-bases/{name}")
 def delete_knowledge_base(name: str):
-    success = kb_manager.delete_index(name)
+    rag_service = get_rag_service()
+    success = kb_manager.delete_index(name, retriever=rag_service.retriever)
     if not success:
-        raise HTTPException(status_code=404, detail=f"Knowledge Base '{name}' not found.")
+        raise HTTPException(status_code=404, detail=f"Knowledge Base '{name}' not found or could not be deleted.")
     return {"message": f"Knowledge Base '{name}' deleted successfully."}
 
 @app.post("/api/ingest")

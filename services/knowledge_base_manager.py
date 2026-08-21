@@ -89,22 +89,34 @@ class KnowledgeBaseManager:
             "provider": "Unknown"
         }
 
-    def delete_index(self, index_name: str) -> bool:
-        """Safely delete a knowledge base from disk."""
+    def delete_index(self, index_name: str, retriever=None) -> bool:
+        """Safely delete a knowledge base from disk with garbage collection for Windows file locks."""
+        import gc
+        import time
+
+        if retriever:
+            retriever.unload_index(index_name)
+        gc.collect()
+
         index_path = os.path.join(INDEXES_DIR, index_name)
         if os.path.exists(index_path):
-            try:
-                shutil.rmtree(index_path)
-                # If deleted KB was the current one, reset current
-                if self.get_current() == index_name:
-                    indexes = self.list_indexes()
-                    if indexes:
-                        self.set_current(indexes[0])
-                    else:
-                        if os.path.exists(CURRENT_INDEX_FILE):
-                            os.remove(CURRENT_INDEX_FILE)
-                return True
-            except Exception as e:
-                print(f"Error deleting index {index_name}: {e}")
-                return False
+            for attempt in range(3):
+                try:
+                    gc.collect()
+                    shutil.rmtree(index_path)
+                    break
+                except Exception as e:
+                    time.sleep(0.3)
+                    if attempt == 2:
+                        print(f"Error deleting index {index_name}: {e}")
+                        return False
+
+            if self.get_current() == index_name:
+                indexes = self.list_indexes()
+                if indexes:
+                    self.set_current(indexes[0])
+                else:
+                    if os.path.exists(CURRENT_INDEX_FILE):
+                        os.remove(CURRENT_INDEX_FILE)
+            return True
         return False
