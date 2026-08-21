@@ -24,7 +24,26 @@ from utils.llm import LLM
 from utils.embedder import Embedder
 from utils.reranker import Reranker
 
-app = FastAPI(title="Adorush AI Assistant API", version="2.0.0")
+from contextlib import asynccontextmanager
+import threading
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Pre-warm ML models in a background daemon thread so first user requests don't time out."""
+    def warmup():
+        try:
+            print("⏳ Pre-warming Embedder & Reranker models in background...")
+            _ = embedder_singleton.model
+            _ = reranker_singleton.model
+            print("✅ Embedder & Reranker models loaded and ready for instant indexing!")
+        except Exception as e:
+            print(f"⚠️ Note during background model warmup: {e}")
+
+    thread = threading.Thread(target=warmup, daemon=True)
+    thread.start()
+    yield
+
+app = FastAPI(title="Adorush AI Assistant API", version="2.0.0", lifespan=lifespan)
 
 # Enable CORS
 app.add_middleware(
@@ -101,7 +120,7 @@ def delete_knowledge_base(name: str):
     return {"message": f"Knowledge Base '{name}' deleted successfully."}
 
 @app.post("/api/ingest")
-async def ingest_documents(
+def ingest_documents(
     files: list[UploadFile] = File(...),
     custom_name: Optional[str] = Form(None)
 ):
@@ -112,7 +131,7 @@ async def ingest_documents(
     saved_tuples = []
 
     for f in files:
-        safe_name = os.path.basename(f.filename)
+        safe_name = os.path.basename(f.filename) if f.filename else "document.txt"
         dest_path = os.path.join(UPLOADS_DIR, safe_name)
         with open(dest_path, "wb") as buffer:
             shutil.copyfileobj(f.file, buffer)
@@ -132,7 +151,10 @@ async def ingest_documents(
             "chunks": stats["chunks"]
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Ingestion failed: {str(e)}")
+
 
 class ChatPayload(BaseModel):
     query: str

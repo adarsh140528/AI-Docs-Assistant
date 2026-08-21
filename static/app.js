@@ -70,6 +70,10 @@ document.addEventListener("DOMContentLoaded", () => {
     async function fetchKnowledgeBases() {
         try {
             const res = await fetch("/api/knowledge-bases");
+            if (!res.ok) {
+                console.warn(`Could not fetch knowledge bases (status: ${res.status})`);
+                return;
+            }
             const data = await res.json();
             state.knowledgeBases = data.knowledge_bases || [];
             
@@ -458,8 +462,19 @@ document.addEventListener("DOMContentLoaded", () => {
             });
 
             if (!res.ok) {
-                const err = await res.json();
-                throw new Error(err.detail || "Upload failed");
+                let errMsg = `Upload failed (Status ${res.status})`;
+                try {
+                    const err = await res.json();
+                    errMsg = err.detail || err.message || errMsg;
+                } catch (_) {
+                    const text = await res.text();
+                    if (text && text.length < 300 && !text.includes("<!DOCTYPE") && !text.includes("<html")) {
+                        errMsg = text;
+                    } else {
+                        errMsg = `Server error (${res.status} ${res.statusText || "Processing Error"}). Please retry or check server logs.`;
+                    }
+                }
+                throw new Error(errMsg);
             }
 
             const data = await res.json();
