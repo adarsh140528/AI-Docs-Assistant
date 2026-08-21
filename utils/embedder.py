@@ -18,8 +18,14 @@ class Embedder:
 
     def __init__(self, model_name: str = None, **kwargs):
         self.model_name = model_name or EMBEDDING_MODEL
-        self.model = load_embedding_model(self.model_name)
+        self._model = None
         self.provider = "local"
+
+    @property
+    def model(self):
+        if self._model is None:
+            self._model = load_embedding_model(self.model_name)
+        return self._model
 
     def embed(self, text: str) -> list[float]:
         """Embed a single text string."""
