@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adorush AI • Documentation Assistant</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <!-- Marked.js & Highlight.js -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <div class="app-layout">
+        
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="brand">
+                    <span class="brand-name">Adorush AI</span>
+                </div>
+            </div>
+
+            <!-- Ingestion Action Button -->
+            <div class="sidebar-action">
+                <button id="btn-open-ingest" class="primary-btn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+                    <span>Upload Documents</span>
+                </button>
+            </div>
+
+            <!-- Knowledge Bases Section -->
+            <div class="sidebar-section">
+                <div class="section-title-row">
+                    <span class="section-title">Knowledge Bases</span>
+                    <span id="kb-count-badge" class="counter-badge">0</span>
+                </div>
+                
+                <div id="kb-list" class="kb-list-container">
+                    <div class="kb-empty-state">No knowledge bases yet. Click "Upload Documents" to create one.</div>
+                </div>
+            </div>
+
+            <!-- Sidebar Footer -->
+            <div class="sidebar-footer">
+                <button id="btn-export-chat" class="footer-btn">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                    Export
+                </button>
+                <button id="btn-clear-chat" class="footer-btn">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                    Clear
+                </button>
+            </div>
+        </aside>
+
+        <!-- MAIN CHAT AREA -->
+        <main class="main-content">
+            
+            <!-- Chat Scroll Area -->
+            <div id="chat-thread" class="chat-thread">
+                
+                <!-- Hero Welcome State -->
+                <div id="hero-welcome" class="hero-welcome">
+                    <h1 class="hero-heading">How can I help you with your docs?</h1>
+                    <p class="hero-subtext">Search across uploaded documentation with hybrid semantic retrieval and verified citations.</p>
+                    
+                    <div class="starter-grid">
+                        <div class="starter-card" data-prompt="Summarize the key takeaways and main concepts from this documentation.">
+                            <div class="starter-title">Executive Summary</div>
+                            <div class="starter-desc">High-level overview of core topics</div>
+                        </div>
+                        <div class="starter-card" data-prompt="What are the prerequisites, system requirements, or setup guidelines?">
+                            <div class="starter-title">Setup & Requirements</div>
+                            <div class="starter-desc">Installation and prerequisites</div>
+                        </div>
+                        <div class="starter-card" data-prompt="What are the common error codes, limitations, or troubleshooting procedures?">
+                            <div class="starter-title">Troubleshooting</div>
+                            <div class="starter-desc">Find error codes and solutions</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Messages will be dynamically rendered here -->
+            </div>
+
+            <!-- Floating Chat Input Bar -->
+            <div class="chat-input-wrapper">
+                <form id="chat-form" class="chat-input-container">
+                    <textarea 
+                        id="chat-input" 
+                        placeholder="Ask a question about the documentation..." 
+                        rows="1"
+                        autocomplete="off"
+                    ></textarea>
+                    <button type="submit" id="btn-send" class="send-btn" title="Send message">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </button>
+                </form>
+                <div class="input-hint">Press <b>Enter</b> to send • <b>Shift+Enter</b> for new line</div>
+            </div>
+        </main>
+    </div>
+
+    <!-- INGESTION MODAL -->
+    <div id="ingest-modal" class="modal-backdrop hidden">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <h3>Upload Documents</h3>
+                </div>
+                <button id="btn-close-modal" class="close-btn">&times;</button>
+            </div>
+            
+            <form id="ingest-form" class="modal-body">
+                <div class="form-group">
+                    <label>Knowledge Base Name (Optional)</label>
+                    <input type="text" id="kb-name-input" placeholder="e.g. Product_Documentation" class="custom-input">
+                </div>
+
+                <div class="form-group">
+                    <label>Files (.pdf, .docx, .txt, .md)</label>
+                    <div id="drop-zone" class="drop-zone">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+                        <p class="drop-text">Drag & drop files here or <span class="browse-link">browse</span></p>
+                        <span class="drop-subtext">PDF, DOCX, TXT, MD</span>
+                        <input type="file" id="file-input" multiple accept=".pdf,.docx,.doc,.txt,.md,.csv" class="hidden">
+                    </div>
+                    <div id="file-list-preview" class="file-preview-list"></div>
+                </div>
+
+                <div id="ingest-progress-container" class="progress-container hidden">
+                    <div class="progress-bar-wrapper">
+                        <div id="ingest-progress-bar" class="progress-bar-fill"></div>
+                    </div>
+                    <div id="ingest-progress-text" class="progress-status-text">Processing documents...</div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" id="btn-cancel-modal" class="secondary-btn">Cancel</button>
+                    <button type="submit" id="btn-submit-ingest" class="primary-btn">
+                        <span>Build Index</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- SOURCE PAGE INSPECTOR DRAWER -->
+    <div id="source-drawer" class="drawer-backdrop hidden">
+        <div class="drawer-panel">
+            <div class="drawer-header">
+                <div class="drawer-title-box">
+                    <span class="drawer-badge">Source Excerpt</span>
+                    <h3 id="drawer-doc-title">Document</h3>
+                    <div id="drawer-page-tag" class="drawer-page-tag">Page 1</div>
+                </div>
+                <button id="btn-close-drawer" class="close-btn">&times;</button>
+            </div>
+            <div class="drawer-body">
+                <div class="drawer-meta-bar">
+                    <span id="drawer-kb-name">Knowledge Base</span>
+                    <button id="btn-copy-source" class="copy-source-btn">Copy</button>
+                </div>
+                <div class="drawer-content-box">
+                    <pre id="drawer-text-content">Loading...</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/app.js"></script>
+</body>
+</html>

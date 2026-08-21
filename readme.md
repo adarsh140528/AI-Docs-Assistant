@@ -1,303 +1,161 @@
-# 🤖 Adorush AI Documentation Assistant
+# 🤖 Adorush AI • Enterprise Documentation Assistant
 
-An AI-powered Retrieval-Augmented Generation (RAG) application that allows users to upload PDF documentation and chat with it using a local Large Language Model (LLM).
-
-The application combines **Semantic Search**, **BM25 Keyword Search**, and **Cross-Encoder Reranking** to provide accurate, context-aware answers with source attribution.
+An enterprise-grade, cloud-deployable **Retrieval-Augmented Generation (RAG)** platform powered by **Groq Llama 3.3 70B** and local **SentenceTransformers** embeddings.
 
 ---
 
 ## ✨ Features
 
-- 📄 Upload PDF documentation
-- 📚 Automatic Knowledge Base creation
-- 🤖 Chat with documents using Llama 3.2
-- 🔍 Semantic Search using ChromaDB
-- 🔤 BM25 Keyword Search
-- ⚡ Hybrid Retrieval (Semantic + BM25)
-- 🎯 Cross-Encoder Reranking
-- 💬 Conversation Memory
-- 🌊 Streaming AI Responses
-- 📑 Source Attribution
-- 📖 Full Page Source Preview
-- 📚 Multiple Knowledge Base Search
-- ⚡ Model Caching for faster startup
-- 🖥️ Completely Local (No cloud APIs required)
+- 🎨 **Premier Glassmorphism Web App**: Sleek HTML5 / CSS3 / JavaScript interface with dark theme, responsive sidebar, and animated components.
+- ⚡ **Groq Llama 3.3 70B**: Lightning-fast, static LLM inference via Groq API.
+- 🧠 **100% Offline / Zero-Cost Embeddings**: `sentence-transformers/all-MiniLM-L6-v2` runs locally on CPU with zero rate limits, zero API costs, and zero 404 errors.
+- 🔍 **Hybrid Retrieval + Reciprocal Rank Fusion (RRF)**: Merges ChromaDB dense vector search with BM25Okapi sparse lexical keyword search.
+- 🎯 **Cross-Encoder Reranker**: High-precision context scoring using `cross-encoder/ms-marco-MiniLM-L-6-v2`.
+- 📄 **Multi-Format Ingestion**: Ingest `.pdf`, `.docx`, `.txt`, `.md`, and `.csv` files into organized, custom-named Knowledge Bases.
+- 📑 **Source Attribution & Full-Page Inspector**: In-line citation pills with relevance chips and a slide-out drawer to inspect supporting page text.
+- 🔒 **Secure Environment Configuration**: API keys are managed purely via `.env` on the backend without any frontend key exposure.
+- 📥 **Export Chat History**: One-click download of conversation transcripts to Markdown.
 
 ---
 
-# 🏗️ Architecture
+## 🏗️ Architecture
 
 ```
-                PDF Upload
-                     │
-                     ▼
-               PDF Extraction
-                (PyMuPDF)
-                     │
-                     ▼
-              Text Chunking
-                     │
-                     ▼
-     Embeddings (nomic-embed-text)
-                     │
-         ┌───────────┴───────────┐
-         ▼                       ▼
-    ChromaDB              BM25 Index
-         │                       │
-         └───────────┬───────────┘
-                     ▼
-             Hybrid Retrieval
-                     │
-                     ▼
-        Cross-Encoder Reranker
-                     │
-                     ▼
-        Prompt + Conversation History
-                     │
-                     ▼
-         Llama 3.2 (Ollama)
-                     │
-                     ▼
-          Streaming AI Response
-                     │
-                     ▼
-            Source Attribution
+        Uploaded Documents (.pdf, .docx, .txt, .md)
+                            │
+                            ▼
+                   DocLoader & Cleaner
+                            │
+                            ▼
+              Recursive Character Chunking
+                            │
+                            ▼
+           Local Embeddings (all-MiniLM-L6-v2)
+                            │
+             ┌──────────────┴──────────────┐
+             ▼                             ▼
+        ChromaDB                       BM25 Index
+             │                             │
+             └──────────────┬──────────────┘
+                            │
+                    User Question
+                            │
+                            ▼
+             Conversational Query Rewriter
+                            │
+                            ▼
+          Hybrid Retrieval + Reciprocal Rank Fusion
+                            │
+                            ▼
+                 Cross-Encoder Reranker
+                            │
+                            ▼
+              Prompt with Source Citations
+                            │
+                            ▼
+                 Groq Llama 3.3 70B
+                            │
+                            ▼
+             Token Streaming & Source Pills
 ```
 
 ---
 
-# 🛠️ Tech Stack
-
-| Technology | Purpose |
-|------------|---------|
-| Python | Backend |
-| Streamlit | User Interface |
-| Ollama | Local LLM Runtime |
-| Llama 3.2 | Large Language Model |
-| ChromaDB | Vector Database |
-| nomic-embed-text | Embedding Model |
-| BM25 | Keyword Retrieval |
-| Cross Encoder MiniLM | Reranking |
-| PyMuPDF | PDF Text Extraction |
-
----
-
-# 📂 Project Structure
+## 📂 Project Structure
 
 ```
 AI-Docs-Assistant/
-
-├── assets/
-├── docs/
-├── indexes/
+├── static/
+│   ├── index.html          # Web application structure
+│   ├── style.css           # Glassmorphism design system
+│   └── app.js              # Real-time streaming & UI logic
 ├── services/
-│   ├── index_service.py
-│   ├── knowledge_base_manager.py
-│   └── rag_service.py
-│
-├── uploads/
+│   ├── index_service.py    # Multi-file chunking, embedding & indexing
+│   ├── knowledge_base_manager.py # Knowledge base lifecycle management (CRUD)
+│   └── rag_service.py      # Conversational RAG pipeline orchestrator
 ├── utils/
-│   ├── bm25.py
-│   ├── chunker.py
-│   ├── embedder.py
-│   ├── llm.py
-│   ├── multi_retriever.py
-│   ├── prompt.py
-│   ├── reranker.py
-│   ├── retriever.py
-│   └── vectordb.py
-│
-├── app.py
-├── rag.py
-├── config.py
-├── requirements.txt
+│   ├── bm25.py             # BM25 sparse keyword retrieval
+│   ├── chunker.py          # RecursiveCharacterTextSplitter
+│   ├── doc_loader.py       # Multi-format document loader (PDF, DOCX, TXT, MD)
+│   ├── embedder.py         # Local SentenceTransformer embeddings
+│   ├── llm.py              # Groq Llama 3.3 inference & streaming
+│   ├── prompt.py           # Grounded prompt templates & query condensation
+│   ├── reranker.py         # Cross-Encoder MiniLM reranking
+│   ├── retriever.py        # Unified Hybrid Retriever with RRF & caching
+│   └── vectordb.py         # ChromaDB vector database wrapper
+├── server.py               # FastAPI backend & static file server
+├── config.py               # Central environment configuration
+├── build_index.py          # CLI indexing script
+├── chat.py                 # CLI chat script
+├── requirements.txt        # Production dependencies
+├── .env.example            # Environment variables template
 └── README.md
 ```
 
 ---
 
-# 🚀 Installation
+## 🚀 Quickstart & Installation
 
-## Clone Repository
+### 1. Clone & Setup Virtual Environment
 
 ```bash
 git clone https://github.com/adarsh140528/AI-Docs-Assistant.git
-
 cd AI-Docs-Assistant
-```
 
----
-
-## Create Virtual Environment
-
-```bash
+# Create virtual environment
 python -m venv venv
-```
 
-Windows
-
-```bash
+# Activate (Windows)
 venv\Scripts\activate
-```
 
-Linux / macOS
-
-```bash
+# Activate (Linux / macOS)
 source venv/bin/activate
 ```
 
----
-
-## Install Dependencies
+### 2. Install Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
----
+### 3. Configure Environment
 
-## Install Ollama
-
-Download from:
-
-https://ollama.com
-
-Pull required models:
+Copy `.env.example` to `.env` and paste your free Groq API key:
 
 ```bash
-ollama pull llama3.2
+cp .env.example .env
 ```
+
+Inside `.env`:
+```env
+GROQ_API_KEY=gsk_your_groq_api_key_here
+PORT=8000
+```
+*(Get a free Groq API key in under 1 minute at [https://console.groq.com/keys](https://console.groq.com/keys))*
+
+### 4. Run the Server
 
 ```bash
-ollama pull nomic-embed-text
+python server.py
 ```
 
----
-
-## Run Application
-
-```bash
-streamlit run app.py
-```
+Open your browser at **[http://localhost:8000](http://localhost:8000)**.
 
 ---
 
-# 💬 Usage
+## 🌐 API Reference
 
-1. Upload one or more PDF documents.
-2. Build a Knowledge Base.
-3. Select one or multiple Knowledge Bases.
-4. Ask questions about the uploaded documentation.
-5. View AI-generated answers with supporting source pages.
-
----
-
-# 📸 Screenshots
-
-### Home
-
-_Add screenshot here_
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `GET` | `/api/status` | Health check & model status |
+| `GET` | `/api/knowledge-bases` | List all available Knowledge Bases with metadata |
+| `DELETE` | `/api/knowledge-bases/{name}` | Delete a Knowledge Base |
+| `POST` | `/api/ingest` | Multipart upload to parse, chunk, embed, and index documents |
+| `POST` | `/api/chat/stream` | Server-Sent Events (SSE) streaming chat endpoint with citations |
+| `GET` | `/api/page-preview` | Fetch original full-page document text for source inspection |
 
 ---
 
-### Upload PDF
-
-_Add screenshot here_
-
----
-
-### Chat
-
-_Add screenshot here_
-
----
-
-### Source Attribution
-
-_Add screenshot here_
-
----
-
-### Multiple Knowledge Bases
-
-_Add screenshot here_
-
----
-
-# 🎯 Retrieval Pipeline
-
-```
-Question
-    │
-    ▼
-Embedding
-    │
-    ▼
-Semantic Search (ChromaDB)
-    │
-    ▼
-BM25 Search
-    │
-    ▼
-Merge Results
-    │
-    ▼
-Cross Encoder Reranker
-    │
-    ▼
-Top Context
-    │
-    ▼
-Llama 3.2
-    │
-    ▼
-Streaming Answer
-```
-
----
-
-# 📈 Key Features
-
-- Hybrid Retrieval
-- Retrieval-Augmented Generation (RAG)
-- Multi Knowledge Base Support
-- Streaming Responses
-- Conversation Memory
-- Cross Encoder Reranking
-- Source Attribution
-- Local AI Inference
-- Full Page Preview
-- Modular Architecture
-
----
-
-# 🔮 Future Improvements
-
-- Docker Support
-- FastAPI Backend
-- Authentication
-- Cloud Deployment
-- REST API
-- OCR Support for Scanned PDFs
-
----
-
-# 📄 License
+## 📄 License
 
 This project is licensed under the MIT License.
-
----
-
-# 👨‍💻 Author
-
-**Adarsh Rasal**
-
-GitHub: https://github.com/adarsh140528
-
-LinkedIn: https://www.linkedin.com/in/adarsh-rasal-a995922a9/
-
-Portfolio: https://adarsh-rasal.vercel.app/
-
----
-
-⭐ If you found this project useful, consider giving it a star on GitHub!

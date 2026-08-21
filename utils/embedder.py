@@ -1,23 +1,41 @@
-import ollama
 from functools import lru_cache
+from config import EMBEDDING_MODEL
 
 
 @lru_cache(maxsize=1)
-def get_embedding_model(model_name):
-    print(f"Loading Embedder: {model_name}")
-    return model_name
+def load_embedding_model(model_name: str):
+    """Singleton cached loader for the local sentence transformer embedder."""
+    from sentence_transformers import SentenceTransformer
+    print(f"Loading local SentenceTransformer Embedder: {model_name}...")
+    return SentenceTransformer(model_name)
 
 
 class Embedder:
+    """
+    High-speed, 100% reliable local embedder using SentenceTransformers.
+    Zero API rate limits, zero network failures, zero cost.
+    """
 
-    def __init__(self, model="nomic-embed-text"):
-        self.model = get_embedding_model(model)
+    def __init__(self, model_name: str = None, **kwargs):
+        self.model_name = model_name or EMBEDDING_MODEL
+        self.model = load_embedding_model(self.model_name)
+        self.provider = "local"
 
-    def embed(self, text):
+    def embed(self, text: str) -> list[float]:
+        """Embed a single text string."""
+        return self.embed_batch([text])[0]
 
-        response = ollama.embed(
-            model=self.model,
-            input=text
-        )
+    def embed_batch(self, texts: list[str], batch_size: int = 64) -> list[list[float]]:
+        """Embed a batch of text strings efficiently."""
+        if not texts:
+            return []
 
-        return response["embeddings"][0]
+        embeddings = self.model.encode(
+            texts,
+            batch_size=batch_size,
+            show_progress_bar=False,
+            convert_to_numpy=True,
+            normalize_embeddings=True
+        ).tolist()
+
+        return embeddings

@@ -1,36 +1,57 @@
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+
+
 class TextChunker:
-    def __init__(self, chunk_size=1000, overlap=200):
+    """
+    Intelligent text chunker using recursive character splitting.
+    Preserves sentence boundaries, paragraphs, and document metadata.
+    """
+
+    def __init__(self, chunk_size: int = 1000, overlap: int = 200):
         self.chunk_size = chunk_size
         self.overlap = overlap
+        self.splitter = RecursiveCharacterTextSplitter(
+            chunk_size=chunk_size,
+            chunk_overlap=overlap,
+            separators=["\n\n", "\n", ". ", "? ", "! ", "; ", ", ", " ", ""],
+            length_function=len,
+        )
 
-    def split(self, pages):
+    def split(self, pages: list[dict]) -> list[dict]:
+        """
+        Split list of page dicts into enriched chunk dicts:
+        [
+            {
+                "page": int,
+                "text": str,
+                "source": str,
+                "chunk_index": int
+            },
+            ...
+        ]
+        """
         chunks = []
+        chunk_counter = 0
 
-        for page in pages:
-            text = page["text"]
-            page_number = page["page"]
+        for page_data in pages:
+            text = page_data.get("text", "").strip()
+            page_number = page_data.get("page", 1)
+            source_file = page_data.get("source", "Document")
 
-            # Skip synthetic reference pages
-            if "Extended Reference" in text:
+            if not text or len(text) < 20:
                 continue
 
-            start = 0
+            split_texts = self.splitter.split_text(text)
 
-            while start < len(text):
-                end = start + self.chunk_size
-
-                chunk = text[start:end].strip()
-
-                # Skip empty chunks
-                if len(chunk) < 50:
-                    start += self.chunk_size - self.overlap
-                    continue
-
-                chunks.append({
-                    "page": page_number,
-                    "text": chunk
-                })
-
-                start += self.chunk_size - self.overlap
+            for snippet in split_texts:
+                clean_snippet = snippet.strip()
+                if len(clean_snippet) >= 30:
+                    chunks.append({
+                        "page": page_number,
+                        "text": clean_snippet,
+                        "source": source_file,
+                        "chunk_index": chunk_counter
+                    })
+                    chunk_counter += 1
 
         return chunks
