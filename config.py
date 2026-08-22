@@ -14,13 +14,15 @@ DEFAULT_INDEX = "default"
 CHUNK_SIZE = int(os.getenv("CHUNK_SIZE", "1000"))
 CHUNK_OVERLAP = int(os.getenv("CHUNK_OVERLAP", "200"))
 
-# Static Groq LLM Configuration
+# Static Groq LLM & Gemini API Keys
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 GROQ_MODEL = os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")
 GROQ_FALLBACK_MODEL = "groq/compound-mini"
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 
-# Embedding & Reranker Configuration (100% local, ultra-fast, zero-cost, no rate limits)
-EMBEDDING_PROVIDER = "local"
+# Embedding & Reranker Configuration
+# Options for EMBEDDING_PROVIDER: "local" (default offline) or "gemini" (cloud API for low-RAM deployment)
+EMBEDDING_PROVIDER = os.getenv("EMBEDDING_PROVIDER", "local").lower()
 EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
 RERANKER_MODEL = os.getenv("RERANKER_MODEL", "cross-encoder/ms-marco-MiniLM-L-6-v2")
 
