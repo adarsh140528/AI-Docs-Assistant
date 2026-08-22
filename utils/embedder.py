@@ -64,7 +64,11 @@ class Embedder:
                 "GEMINI_API_KEY is not set. Please add GEMINI_API_KEY to your environment or .env file."
             )
 
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:batchEmbedContents?key={api_key}"
+        model_name = os.getenv("GEMINI_EMBEDDING_MODEL", "gemini-embedding-001")
+        if not model_name.startswith("models/"):
+            model_name = f"models/{model_name}"
+
+        url = f"https://generativelanguage.googleapis.com/v1beta/{model_name}:batchEmbedContents?key={api_key}"
 
         embeddings = []
         # Gemini batchEmbedContents accepts up to 100 requests per call
@@ -73,7 +77,7 @@ class Embedder:
             batch = texts[i : i + chunk_size]
             requests_payload = [
                 {
-                    "model": "models/text-embedding-004",
+                    "model": model_name,
                     "content": {"parts": [{"text": t}]},
                 }
                 for t in batch
