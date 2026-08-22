@@ -2,6 +2,11 @@
 
 An enterprise-grade, cloud-deployable **Retrieval-Augmented Generation (RAG)** platform powered by **Groq Llama 3.3 70B** and local **SentenceTransformers** embeddings.
 
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Render-46E3B7?style=for-the-badge&logo=render&logoColor=white)](https://ai-docs-assistant-nqty.onrender.com)
+[![GitHub License](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
+
+🔗 **Live Demo:** **[https://ai-docs-assistant-nqty.onrender.com](https://ai-docs-assistant-nqty.onrender.com)**
+
 ---
 
 ## ✨ Features
@@ -145,20 +150,22 @@ Open your browser at **[http://localhost:8000](http://localhost:8000)**.
 
 ---
 
-## 🚀 Easy Cloud Deployment (Render / Railway / Heroku)
+## 🚀 Cloud Deployment (Render / Railway)
 
-Deploying as a standard Python web service on any cloud platform:
+- 🌐 **Live Web Application**: **[https://ai-docs-assistant-nqty.onrender.com](https://ai-docs-assistant-nqty.onrender.com)**
 
 ### Deploy to Render
 1. Go to [Render Dashboard](https://dashboard.render.com/) -> **New Web Service**.
 2. Connect your GitHub repository: `adarsh140528/AI-Docs-Assistant`.
-3. Settings:
+3. Configure settings:
+   - **Branch**: `cloud-deployment` *(for lightweight ~35MB RAM mode)* or `main`
    - **Runtime**: `Python 3`
    - **Build Command**: `pip install -r requirements.txt`
-   - **Start Command**: `uvicorn server:app --host 0.0.0.0 --port $PORT --workers 1 --timeout-keep-alive 75`
-   - **Health Check Path**: `/health`
-4. Add Environment Variable:
-   - `GROQ_API_KEY`: `gsk_your_groq_api_key_here`
+   - **Start Command**: `python server.py`
+4. Add Environment Variables:
+   - `GROQ_API_KEY`: `gsk_your_groq_api_key` *(Free from [console.groq.com/keys](https://console.groq.com/keys))*
+   - `GEMINI_API_KEY`: `AIzaSy...` *(Free from [aistudio.google.com](https://aistudio.google.com))*
+   - `EMBEDDING_PROVIDER`: `gemini`
 5. Click **Deploy Web Service**!
 
 ### Deploy to Railway
